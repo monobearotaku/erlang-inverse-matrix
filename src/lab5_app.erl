@@ -11,10 +11,11 @@
 
 % Function to start the module operations
 start(_StartType, _StartArgs) ->
-    % Initialize a 3x3 matrix with random values
-    Matrix = init_random_matrix(3, 3),
-    % Print the matrix
-    print_matrix(Matrix),
+    N = 5,
+    A = init_random_matrix(N),
+    % print_matrix(A),
+    {Matrix, Identity} = inverse_matrix(A, N),
+    print_matrix(Identity),
     {ok, self()}.
 
 %% Application stop function
@@ -22,16 +23,59 @@ stop(_State) ->
     ok.
 
 %% internal functions
+print_matrix(Matrix) ->
+    lists:map(fun(Row) -> 
+        lists:map(fun(Item) -> 
+            io:format("~.2f ", [Item])            
+        end, Row),
+        io:nl()    
+    end, Matrix).
 
-% Function to print the matrix
-print_matrix(Matrix) when is_list(Matrix) ->
-    lists:foreach(fun(Row) ->
-                      io:format("~p~n", [Row])
-                  end, Matrix).
 
-% Function to initialize a matrix with random values
-init_random_matrix(Rows, Cols) ->
-    % Generate a list of lists with random values
+init_random_matrix(N) ->
     lists:map(fun(_) ->
-                  lists:map(fun(_) -> rand:uniform(100) end, lists:seq(1, Cols))
-              end, lists:seq(1, Rows)).
+        lists:map(fun(_) -> 
+            rand:uniform_real() * 10.0 end, lists:seq(1, N))
+    end, lists:seq(1, N)).
+
+init_identity_matrix(N) ->
+    lists:map(fun(I) -> 
+        lists:map(fun(J) ->
+            if I == J -> 1.0; true -> 0.0 end
+        end, lists:seq(1, N))
+    end, lists:seq(1, N)).
+
+% inverse_matrix(Matrix, N) ->
+%     lists:map(fun(I) ->
+%         Row = lists:nth(I, Matrix),
+%         Pivot = lists:nth(I, Row)
+%         io:format("~f~n", [Pivot])
+% end, lists:seq(1, N)).
+
+
+inverse_matrix(Matrix, N) ->
+    Identity = init_identity_matrix(N),
+    lists:foldl(fun(I, {Mat, Id}) -> 
+        % print_matrix(Id),
+        Pivot = getPivot(Mat, I), 
+        ScaledMat = setRow(Mat, scaleRow(getRow(Mat, I), Pivot), I),
+        ScaledId = setRow(Id, scaleRow(getRow(Id, I), Pivot), I),
+
+        {ScaledMat, ScaledId}    
+    end, {Matrix, Identity}, lists:seq(1, N)).
+
+getPivot(Matrix, I) ->
+    lists:nth(I, getRow(Matrix, I)).
+
+getRow(Matrix, I) ->
+    lists:nth(I, Matrix).
+
+scaleRow(Row, Pivot) -> 
+    lists:map(fun(Item) -> 
+        Item / Pivot
+    end, Row).
+
+setRow(Matrix, Row, I) ->
+    Before = lists:sublist(Matrix, I - 1),   
+    After = lists:nthtail(I, Matrix),
+    Before ++ [Row] ++ After.
