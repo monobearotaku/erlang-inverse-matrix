@@ -11,11 +11,16 @@
 
 % Function to start the module operations
 start(_StartType, _StartArgs) ->
-    N = 5,
+    N = 100,
     A = init_random_matrix(N),
-    print_matrix(A),
-    {_, Identity} = inverse_matrix(A, N),
-    print_matrix(Identity),
+    % print_matrix(A),
+
+    StartTime = erlang:monotonic_time(),
+    {_ , Identity} = inverse_matrix(A, N),
+    EndTime = erlang:monotonic_time(),
+    Elapsed_time = erlang:convert_time_unit(EndTime - StartTime, native, millisecond),
+    io:format("Execution time: ~p ms~n", [Elapsed_time]),
+    % print_matrix(Identity),
     {ok, self()}.
 
 %% Application stop function
